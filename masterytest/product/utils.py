@@ -3,16 +3,17 @@ import random
 
 from mixer.backend.django import mixer
 
-from product.models import Product, Supplier
+from product.models import Product, Supplier, Articul
 
 
 def create_fixtures():
     Supplier.objects.bulk_create([Supplier(user=mixer.blend('auth.user')) for i in range(4)])
-    articuls = ['one','two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
+    Articul.objects.bulk_create(
+        Articul(title=title) for title in ['one','two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
+        )
     products = list()
-
     for supplier in Supplier.objects.all():
-        for articul in articuls:
+        for articul in Articul.objects.all():
             title = 'Product {} {}'.format(articul, supplier.user.username)
             price = random.randint(10, 100)
             is_av = random.choice([True, False])
