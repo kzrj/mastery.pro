@@ -12,7 +12,8 @@ urlpatterns = [
     url(r'^$', views.IndexView.as_view(), name='index'),
     url(r'^supplier-regular-page', views.SupplierRegularView.as_view(),
     	name='supplier-regular-page'),
-    url(r'^supplier-comparative-page', views.SupplierRegularView.as_view(),
+    url(r'^supplier-comparative-page', views.SupplierComparativeView.as_view(),
     	name='supplier-comparative-page'),
+    url(r'^customer-page', views.CustomerView.as_view(), name='customer-page'),
     url(r'^test_data/', views.test_data_view)
 ] 

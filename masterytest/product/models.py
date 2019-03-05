@@ -36,7 +36,8 @@ class Supplier(models.Model):
                 to_attr='available_products'
                 )
             )
-
+        
+    @property
     def get_own_products_with_comparative_list(self):
         products_with_comparative_list = list()
 

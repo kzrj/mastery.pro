@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 
-from .decorators import supplier_required, is_user_a_supplier
+from .utils import is_user_a_supplier, is_user_a_customer
 from .models import Product, Supplier
 
 
@@ -17,22 +17,16 @@ class IndexView(TemplateView):
     template_name = "index.html"
 
 
-class IsUserSupplierMixin(UserPassesTestMixin):
-    def test_func(self):
-        return is_user_a_supplier(self.request.user)
-
-class IsUserSupplierMixin2(AccessMixin):
-    permission_denied_message = 'OOpa'
+class IsUserSupplierMixin(AccessMixin):
     raise_exception = True
 
     def dispatch(self, request, *args, **kwargs):
         if not is_user_a_supplier(request.user):
             return self.handle_no_permission()
-        return super(IsUserSupplierMixin2, self).dispatch(request, *args, **kwargs)
+        return super(IsUserSupplierMixin, self).dispatch(request, *args, **kwargs)
 
 
-@method_decorator([login_required, supplier_required], name='dispatch')
-class SupplierRegularView(TemplateView):
+class SupplierRegularView(IsUserSupplierMixin, TemplateView):
     template_name = 'supplier_product_list.html'
 
     def get_context_data(self, **kwargs):
@@ -42,14 +36,31 @@ class SupplierRegularView(TemplateView):
         return context
 
 
-# @method_decorator([login_required, supplier_required], name='dispatch')
-class SupplierComparativeView(TemplateView):
+class SupplierComparativeView(IsUserSupplierMixin, TemplateView):
     template_name = 'supplier_product_list_comparative.html'
 
     def get_context_data(self, **kwargs):
-        context = super(SupplierRegularView, self).get_context_data(**kwargs)
+        context = super(SupplierComparativeView, self).get_context_data(**kwargs)
         supplier = self.request.user.supplier
         context['products_with_comparative_list'] = supplier.get_own_products_with_comparative_list
+        return context
+
+
+class IsUserCustomerMixin(AccessMixin):
+    raise_exception = True
+
+    def dispatch(self, request, *args, **kwargs):
+        if not is_user_a_customer(request.user):
+            return self.handle_no_permission()
+        return super(IsUserCustomerMixin, self).dispatch(request, *args, **kwargs)
+
+
+class CustomerView(IsUserCustomerMixin, TemplateView):
+    template_name = 'customer.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(CustomerView, self).get_context_data(**kwargs)
+        context['products'] = Product.objects.all()
         return context
 
 

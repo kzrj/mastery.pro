@@ -3,7 +3,52 @@ import random
 
 from mixer.backend.django import mixer
 
-from product.models import Product, Supplier, Articul
+from product.models import Product, Supplier, Articul, Customer
+
+
+def is_user_a_supplier(user):
+    if user.is_authenticated() and Supplier.objects.filter(user=user):
+        return True
+    return False
+
+
+def is_user_a_customer(user):
+    if user.is_authenticated() and Customer.objects.filter(user=user):
+        return True
+    return False
+
+
+def create_supplier():
+    user = mixer.blend('auth.user')
+    return Supplier.objects.create(user=user)
+
+
+def create_articuls():
+    Articul.objects.bulk_create(
+        Articul(title=title) for title in ['one','two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
+        )
+
+
+def create_products(supplier):
+    products = list()
+
+    for articul in Articul.objects.all():
+        title = 'Product {} {}'.format(articul, supplier.user.username)
+        price = random.randint(10, 100)
+        is_av = random.choice([True, False])
+        products.append(Product(title=title, price=price, articul=articul,
+         is_available=is_av, supplier=supplier))
+
+    Product.objects.bulk_create(products)
+
+
+def create_fixtures2():
+    Supplier.objects.bulk_create([Supplier(user=mixer.blend('auth.user')) for i in range(4)])
+
+    create_articuls()
+    
+    for supplier in Supplier.objects.all():
+        create_products(supplier)
 
 
 def create_fixtures():
