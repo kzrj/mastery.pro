@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
 from django.db import models
+from django.db.models import Prefetch, Q
 from django.utils.encoding import python_2_unicode_compatible
 from django.contrib.auth.models import User
+
+
+@python_2_unicode_compatible
+class Customer(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user.username
 
 
 @python_2_unicode_compatible
@@ -12,26 +21,40 @@ class Supplier(models.Model):
         return self.user.username
 
     @property
-    def own_articuls_pk_list(self):
-        products = Product.objects.filter(supplier=self).values_list('articul')
-        supplier_articuls_pk = [ a[0] for a in products ]
-        return supplier_articuls_pk, products
+    def get_own_products(self):
+        return Product.objects.filter(supplier=self).select_related('articul')
 
-    @property
-    def own_articuls_queryset(self):
-        return Articul.objects.filter(pk__in=self.own_articuls_pk_list[0])
+    def get_own_articuls(self, products):
+        articul_pk_list = [p.articul.pk for p in products]
+        return Articul.objects.filter(pk__in=articul_pk_list)
 
+    def get_own_articuls_with_related_available_products(self, articuls):
+        return articuls.prefetch_related(
+            Prefetch(
+                'products',
+                queryset=Product.objects.filter((Q(is_available=True) | Q(supplier=self))),
+                to_attr='available_products'
+                )
+            )
 
-# class ArticulManager(models.Manager):
-#     def products_sorted_by_price(self):
-#         return self.model.products.all().order_by('-price')
+    def get_own_products_with_comparative_list(self):
+        products_with_comparative_list = list()
+
+        products = self.get_own_products
+        articuls = self.get_own_articuls(products)
+        articuls_with_products = self.get_own_articuls_with_related_available_products(articuls)
+
+        for articul, product in zip(articuls_with_products, products):
+            idx = articul.available_products.index(product)
+            products_with_comparative_list.append({'product': product,
+                'products_with_less_price': articul.available_products[:idx]})
+
+        return products_with_comparative_list
 
 
 @python_2_unicode_compatible
 class Articul(models.Model):
     title = models.CharField(max_length=10)
-
-    # objects = ArticulManager()
 
     def __str__(self):
         return self.title

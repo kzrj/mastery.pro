@@ -2,8 +2,8 @@ from mixer.backend.django import mixer
 
 from django.test import TestCase, TransactionTestCase
 from django.db.utils import IntegrityError
-from django.db import connection
-from django.conf import settings
+from django.db.models import Q
+from django.db.models.query import QuerySet
 
 from product.models import Product, Supplier, Articul
 
@@ -39,43 +39,57 @@ class ProductModelUniqueTest(TransactionTestCase):
                     supplier=supplier2, is_available=True)
 
 
-class ProductManagerTest(TestCase):
+class SupplierModelTest(TransactionTestCase):
     fixtures = ['test_data', ]
 
-    # def test_supplier_own_articuls_pk_list(self):
-    #     supplier = Supplier.objects.all().first()
-    #     supplier_articuls_pk = supplier.own_articuls_pk_list
-    #     self.assertIsInstance(supplier_articuls_pk, list)
-    #     self.assertNotEqual(len(supplier_articuls_pk), 0)
+    def setUp(self):
+        self.supplier = Supplier.objects.all().first()
 
-    # def test_supplier_own_articuls_pk_list_empty(self):
-    #     supplier = create_supplier()
-    #     supplier_articuls_pk = supplier.own_articuls_pk_list
-    #     self.assertIsInstance(supplier_articuls_pk, list)
-    #     self.assertEqual(len(supplier_articuls_pk), 0)
+    def test_get_own_products(self):
+        with self.assertNumQueries(1):
+            products_pk = [p.pk for p in self.supplier.get_own_products]
 
-    def test_compare(self):
-        settings.DEBUG = True        
+        regular_products_pk = [ p.pk for p in Product.objects.filter(supplier=self.supplier)]
+        self.assertListEqual(products_pk, regular_products_pk)
 
-        supplier = Supplier.objects.all().first()
-        supplier_articuls = supplier.own_articuls_queryset
-        # supplier_products = supplier.own_articuls_pk_list[1]
-        supplier_products = Product.objects.filter(supplier=supplier)
+    def test_get_own_articuls(self):
+        products = self.supplier.get_own_products
+        articuls = self.supplier.get_own_articuls(products)
+        self.assertIsInstance(articuls, QuerySet)
 
-        print(len(connection.queries))
+        regular_articuls_pk = [a.pk for a in Articul.objects.filter(products__in=products)]
+        articuls_pk = [a.pk for a in articuls]
+        regular_articuls_pk.sort()
+        articuls_pk.sort()
+        self.assertListEqual(articuls_pk, regular_articuls_pk)
 
-        articuls = supplier_articuls.prefetch_related('products')
-        # print(articuls)
+    def test_get_own_articuls_with_related_available_products(self):
+        products = self.supplier.get_own_products
+        articuls = self.supplier.get_own_articuls(products)
+        
+        with self.assertNumQueries(2):
+            articuls_with_products = self.supplier.get_own_articuls_with_related_available_products(articuls)
+            for articul in articuls_with_products:
+                articul.available_products
 
-        for articul, product in zip(articuls, supplier_products):
-            print(supplier)
-            # print(articul.products.all().values_list('supplier'))
-            print(articul.products.all())
-            print(articul, product)
-            # print(list(articul.products.all()))
-            print(list(articul.products.all()).index(product))
-            print('____________________________')
+        for articul in articuls_with_products:
+            products = Product.objects.filter(articul=articul). \
+                filter(Q(is_available=True) | Q(supplier=self.supplier))
+            self.assertListEqual(articul.available_products, list(products))
 
+    def test_get_own_products_with_comparative_list(self):
+        products = self.supplier.get_own_products
 
-        print(len(connection.queries))
-        settings.DEBUG = False
+        with self.assertNumQueries(3):
+            products_with_comparative_list = self.supplier.get_own_products_with_comparative_list()
+            len(products_with_comparative_list)
+
+        for product_with_list, product in zip(products_with_comparative_list, products):
+            self.assertEqual(product_with_list['product'], product)
+
+            products_with_less_price = Product.objects \
+                                        .filter(articul=product.articul) \
+                                        .filter(is_available=True) \
+                                        .filter(price__lt=product.price)
+            self.assertListEqual(product_with_list['products_with_less_price'],
+                 list(products_with_less_price))
