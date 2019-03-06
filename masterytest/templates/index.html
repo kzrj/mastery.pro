@@ -1,5 +1,21 @@
 {% extends "base.html" %} 
 {% block content%}
-	<h1>Главная страница</h1>
+	<div class="container">
+		<h1>Главная страница {{ user }}</h1>
+		<ul>
+			<li><a href="{% url 'customer-page' %}">Страница покупателя</a></li>
+			<li><a href="{% url 'supplier-regular-page' %}">Страница поставщика 1</a></li>
+			<li><a href="{% url 'supplier-comparative-page' %}">Страница поставщика 2 (список своих товаров + более дешевые товары)</a></li>
+			<li><a href="{% url 'create-images' %}">Создать изображения для товаров</a></li>
+		</ul>
+		<div>
+			<p>Тестовые пользователи:</p>
+			<p>test_admin  qwerty123</p>
+			<p>test_supplier1  qwerty123</p>
+			<p>test_supplier2  qwerty123</p>
+			<p>test_customer1  qwerty123</p>
+			
+		</div>
+	</div>
 	
 {% endblock %}

@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import random
 
+from django.conf import settings
+
 from mixer.backend.django import mixer
 
-from product.models import Product, Supplier, Articul, Customer
+from product.models import Product, Supplier, Articul, Customer, ProductImage
 
 
 def is_user_a_supplier(user):
@@ -66,3 +68,15 @@ def create_fixtures():
              is_available=is_av, supplier=supplier))
 
     Product.objects.bulk_create(products)
+
+
+IMAGE_PATH = settings.BASE_DIR + '/product/img.jpg'
+
+def create_product_images(product):
+    for i in range(1,3):
+        image = ProductImage.objects.create(product=product)
+        file = open(IMAGE_PATH, 'rb')
+        image.image.save('img.jpg', file)
+    featured = ProductImage.objects.filter(product=product).first()
+    featured.featured = True
+    featured.save()

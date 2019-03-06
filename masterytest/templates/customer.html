@@ -1,6 +1,45 @@
 {% extends "base.html" %} 
 {% block content%}
-	<h1>Страница поставщика 1</h1>
-	<p>{{ user }}</p>
+	<div class="container">
+		<h1>Страница покупателя {{ user }}</h1>
+		<div class="row">
+			<div class="col-3">
+				<b>Название</b>
+			</div>
+			<div class="col-1">
+				<b>Артикул</b>
+			</div>
+			<div class="col-1">
+				<b>Цена</b>
+			</div>
+			<div class="col-2">
+				<b>Поставщик</b>
+			</div>
+			<div class="col-5">
+				<b>Фото</b>
+			</div>
+		</div>
+	{% for product in products %}
+		<div class="row">
+			<div class="col-3">
+				{{ product.title }}
+			</div>
+			<div class="col-1">
+				{{ product.articul }}
+			</div>
+			<div class="col-1">
+				{{ product.price }}$
+			</div>
+			<div class="col-2">
+				{{ product.supplier }}
+			</div>
+			<div class="col-5">
+				<img src="{{ product.images.all.0.image.url }}" height='100' width='100'/>
+			</div>
+		</div>
+		<hr>
+	{% endfor %}
+	</div>
+	
 	
 {% endblock %}

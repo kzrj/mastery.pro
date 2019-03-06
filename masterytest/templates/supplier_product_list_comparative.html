@@ -1,6 +1,55 @@
 {% extends "base.html" %} 
 {% block content%}
-	<h1>Страница поставщика 1</h1>
-	<p>{{ user }}</p>
+	<div class="container">
+	<h1>Страница поставщика 2  {{ user }}</h1>
+	<div class="row">
+			<div class="col-3">
+				<b>Название</b>
+			</div>
+			<div class="col-1">
+				<b>Артикул</b>
+			</div>
+			<div class="col-1">
+				<b>Цена</b>
+			</div>
+			<div class="col-1">
+				<b>Наличие</b>
+			</div>
+			<div class="col-6">
+				<b>Товары с более дешевой ценой(в наличии)</b>
+			</div>
+		</div>
+	{% for product_pair in products_with_comparative_list %}
+		<div class="row">
+			<div class="col-3">
+				{{ product_pair.product.title }}
+			</div>
+			<div class="col-1">
+				{{ product_pair.product.articul }}
+			</div>
+			<div class="col-1">
+				{{ product_pair.product.price }}$
+			</div>
+			<div class="col-1">
+				{% if product_pair.product.is_available %}
+					в наличии
+				{% else %}
+					не в наличии
+				{% endif %}
+			</div>
+			<div class="col-6">
+				{% for product_with_less_price in product_pair.products_with_less_price %}
+					
+						<div class="row">
+							<div class="col-9">{{ product_with_less_price.title }}</div>
+							<div class="col-3">{{ product_with_less_price.price }}$</div>
+						</div>
+					
+				{% endfor %}
+			</div>
+		</div>
+		<hr>
+	{% endfor %}
+	</div>
 	
 {% endblock %}

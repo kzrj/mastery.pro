@@ -28,15 +28,13 @@ class ProductViewsTest(TestCase):
     fixtures = ['test_data', ]
 
     def setUp(self):
-        user = User.objects.create_user(username='test_supplier1', password='qwerty123')
-        self.supplier1 = Supplier.objects.create(user=user)
-        create_products(self.supplier1)
+        user = User.objects.get(username='test_supplier1')
+        self.supplier1 = Supplier.objects.get(user=user)
 
-        user = User.objects.create_user(username='test_customer1', password='qwerty123')
-        self.customer1 = Customer.objects.create(user=user)
+        user = User.objects.get(username='test_customer1')
+        self.customer1 = Customer.objects.get(user=user)
 
-        self.superuser = User.objects.create_superuser(username='test_admin',
-         password='qwerty123', email='')
+        self.superuser = User.objects.get(username='test_admin')
 
         self.client = Client()
 

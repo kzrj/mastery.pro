@@ -92,7 +92,11 @@ class Product(models.Model):
 @python_2_unicode_compatible
 class ProductImage(models.Model):
     image = models.ImageField()
+    featured = models.BooleanField(default=False)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
+
+    class Meta:
+        ordering = ['-featured',]
 
     def __str__(self):
         return self.product.title + 'image %d' % self.pk

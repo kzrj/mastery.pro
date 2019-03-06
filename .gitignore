@@ -3,11 +3,7 @@
 **/migrations/*.py
 !**/migrations/__init__.py
 
-
 **/static/
 !**/static/fonts/
 
-data/
 media/
-rabbit_data/
-postgres_data/

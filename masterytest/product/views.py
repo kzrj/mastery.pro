@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 
-from .utils import is_user_a_supplier, is_user_a_customer
+from .utils import is_user_a_supplier, is_user_a_customer, create_product_images
 from .models import Product, Supplier
 
 
@@ -64,8 +64,8 @@ class CustomerView(IsUserCustomerMixin, TemplateView):
         return context
 
 
-def test_data_view(request):
-    # Products.objects.all()
-    user = User.objects.create_user(username='testuser2', password='qwerty123')
-    Supplier.objects.create(user=user)
-    return HttpResponse(user)
+def create_images_for_products_view(request):
+    for product in Product.objects.all():
+        create_product_images(product)
+    
+    return HttpResponse('Created.')
